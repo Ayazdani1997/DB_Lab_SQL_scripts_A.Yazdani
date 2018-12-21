@@ -14,10 +14,16 @@ as begin
 	declare @attackerGoldCount int
 	declare @defenderFoodCount int
 	declare @defenderGoldCount int
+	declare @army char( 100 )
+	set @army = 'army'
 	set @winnerKillFactor = ABS( CHECKSUM( NEWID() ) % 10 + 10 )
 	set @loserKillFactor = ABS( CHECKSUM( NEWID() ) % 10 + 20 )
-	select @attackerClanInitialSoldier = cur_soldier_count from ClanDB.dbo.Clan clan where clan.cid = @attackerClanId
-	select @defenderClanInitialSoldier = cur_soldier_count from ClanDB.dbo.Clan clan where clan.cid = @defenderClanId
+	select @attackerClanInitialSoldier = resourceMapper.resource_count
+		from HavingResource resourceMapper
+		where resourceMapper.cid = @attackerClanId and resourceMapper.resource_name = @army
+	select @defenderClanInitialSoldier = resourceMapper.resource_count
+		from HavingResource resourceMapper
+		where resourceMapper.cid = @defenderClanId and resourceMapper.resource_name = @army
 	select @attackerFoodCount = resourceMapper.resource_count
 		from ClanDB.dbo.Wars w , ClanDB.dbo.HavingResource resourceMapper
 		where w.attacker_id = resourceMapper.cid and resourceMapper.resource_name = 'food'
@@ -52,7 +58,9 @@ as begin
 	update ClanDB.dbo.HavingResource set resource_count = @attackerGoldCount where cid = @defenderClanId and resource_name = 'gold'
 	insert into ClanDB.dbo.Wars values( @attackerClanId , @defenderClanId , @attackerClanInitialSoldier  , 
 		@finalAttackerSoldier , @defenderClanInitialSoldier , @finalDefenderSoldier , @startDate )
-	update ClanDB.dbo.Clan set cur_soldier_count = @finalAttackerSoldier where cid = @attackerClanId
-	update ClanDB.dbo.Clan set cur_soldier_count = @finalDefenderSoldier where cid = @defenderClanId
+	update HavingResource set resource_count = @finalAttackerSoldier
+		where cid = @attackerClanId and resource_name = @army
+	update HavingResource set resource_count = @finalDefenderSoldier
+		where cid = @defenderClanId and resource_name = @army
 	return
 end
