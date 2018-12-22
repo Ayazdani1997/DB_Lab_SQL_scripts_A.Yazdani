@@ -14,8 +14,12 @@ as begin
 	declare @attackerGoldCount int
 	declare @defenderFoodCount int
 	declare @defenderGoldCount int
+	declare @food char( 100 )
 	declare @army char( 100 )
+	declare @gold char( 100 )
 	set @army = 'army'
+	set @food = 'food'
+	set @gold = 'gold'
 	set @winnerKillFactor = ABS( CHECKSUM( NEWID() ) % 10 + 10 )
 	set @loserKillFactor = ABS( CHECKSUM( NEWID() ) % 10 + 20 )
 	select @attackerClanInitialSoldier = resourceMapper.resource_count
@@ -26,16 +30,16 @@ as begin
 		where resourceMapper.cid = @defenderClanId and resourceMapper.resource_name = @army
 	select @attackerFoodCount = resourceMapper.resource_count
 		from ClanDB.dbo.Wars w , ClanDB.dbo.HavingResource resourceMapper
-		where w.attacker_id = resourceMapper.cid and resourceMapper.resource_name = 'food'
+		where w.attacker_id = resourceMapper.cid and resourceMapper.resource_name = @food
 	select @attackerGoldCount = resourceMapper.resource_count
 		from ClanDB.dbo.Wars w , ClanDB.dbo.HavingResource resourceMapper
-		where w.attacker_id = resourceMapper.cid and resourceMapper.resource_name = 'gold'
+		where w.attacker_id = resourceMapper.cid and resourceMapper.resource_name = @gold
 	select @defenderFoodCount = resourceMapper.resource_count
 		from ClanDB.dbo.Wars w , ClanDB.dbo.HavingResource resourceMapper
-		where w.defender_id = resourceMapper.cid and resourceMapper.resource_name = 'food'
+		where w.defender_id = resourceMapper.cid and resourceMapper.resource_name = @food
 	select @defenderGoldCount = resourceMapper.resource_count
 		from ClanDB.dbo.Wars w , ClanDB.dbo.HavingResource resourceMapper
-		where w.defender_id = resourceMapper.cid and resourceMapper.resource_name = 'gold'
+		where w.defender_id = resourceMapper.cid and resourceMapper.resource_name = @gold
 	if @attackerClanInitialSoldier > @defenderClanInitialSoldier begin
 		set @finalAttackerSoldier = @attackerClanInitialSoldier - ( @attackerClanInitialSoldier * @winnerKillFactor ) / 100
 		set @finalDefenderSoldier = @defenderClanInitialSoldier - ( @defenderClanInitialSoldier * @loserKillFactor ) / 100
@@ -52,10 +56,10 @@ as begin
 		set @attackerFoodCount = @attackerFoodCount - @defenderFoodCount / 10
 		set @attackerGoldCount = @attackerGoldCount - @defenderGoldCount / 10
 	end
-	update ClanDB.dbo.HavingResource set resource_count = @defenderFoodCount where cid = @defenderClanId and resource_name = 'food'
-	update ClanDB.dbo.HavingResource set resource_count = @defenderGoldCount where cid = @defenderClanId and resource_name = 'gold'
-	update ClanDB.dbo.HavingResource set resource_count = @attackerFoodCount where cid = @attackerClanId and resource_name = 'food'
-	update ClanDB.dbo.HavingResource set resource_count = @attackerGoldCount where cid = @defenderClanId and resource_name = 'gold'
+	update ClanDB.dbo.HavingResource set resource_count = @defenderFoodCount where cid = @defenderClanId and resource_name = @food
+	update ClanDB.dbo.HavingResource set resource_count = @defenderGoldCount where cid = @defenderClanId and resource_name = @gold
+	update ClanDB.dbo.HavingResource set resource_count = @attackerFoodCount where cid = @attackerClanId and resource_name = @food
+	update ClanDB.dbo.HavingResource set resource_count = @attackerGoldCount where cid = @attackerClanId and resource_name = @gold
 	insert into ClanDB.dbo.Wars values( @attackerClanId , @defenderClanId , @attackerClanInitialSoldier  , 
 		@finalAttackerSoldier , @defenderClanInitialSoldier , @finalDefenderSoldier , @startDate )
 	update HavingResource set resource_count = @finalAttackerSoldier

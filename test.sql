@@ -1,1 +1,2 @@
-feedArmy 2
+-- developBuildingForClan 2
+select * from rankOfClans()
