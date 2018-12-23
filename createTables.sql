@@ -13,7 +13,6 @@ create table Clan
 	cid int identity
 		constraint Clan_PK
 			primary key,
-	cur_soldier_count int not null,
 	manager_nid int not null
 		constraint Clan_UN
 			unique,
